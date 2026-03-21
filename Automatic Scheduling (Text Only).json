@@ -1,0 +1,294 @@
+{
+  "name": "Automatic Scheduling (Text Only)",
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -496,
+        -96
+      ],
+      "id": "d7bd5b7d-c8bb-43d2-976e-36ecfc0c792a",
+      "name": "Telegram Trigger",
+      "webhookId": "988f6d7b-6028-4a13-885f-7dce069416cb",
+      "credentials": {
+        "telegramApi": {
+          "id": "UckcAkXOAA1JNoxJ",
+          "name": "Telegram account 43"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.message.text }}",
+        "options": {
+          "systemMessage": "=You are a scheduling assistant for the business owner on Telegram.\nYour job is to schedule meetings with employees using a friendly tone.\nThe current date and time is {{ $now.setZone('Africa/Cairo').toString() }}\n\n## Tools\n- Telegram Trigger: Receive requests and confirmations from the owner\n- Telegram Send Message: Send confirmations and updates\n- Google Sheets: Read Supervisor and Employee database (Role, Name, Phone, Email)\n- Google Calendar: Check conflicts and create events\n- Gmail: Email meeting invitations with details and meet link\n- OpenAI Chat Model: Interpret intent and manage flow\n- Simple Memory: Store meeting details\n\n## Rules\n- NEVER ask for confirmation on obvious implied tasks\n- NEVER ask \"should I notify the person?\" — always notify automatically\n- NEVER ask \"Would you like me to send the email?\" — always send it\n- NEVER ask ANY follow-up question after scheduling — just do it all at once\n- When you have person + date + time: create calendar event AND send email in the same step\n- After completing ALL actions, send ONE final summary message only\n\n## Responsibilities\n1. Get meeting request from Telegram\n2. Look up employee in Google Sheets (REQUIRED)\n3. Check Google Calendar for conflicts\n4. Create calendar event\n5. Send Gmail confirmation email to employee (MANDATORY — no asking)\n6. Reply to owner with ONE final summary message\n\n## Output Format\n✅ Meeting Scheduled & Confirmation Sent!\n- With: [Name]\n- Date: [Date]\n- Time: [Time]\n- Location: [Location]\n- Topic: [Topic]\n- [Name] has been notified via email.\n\n\n## Style\n- Keep confirmations short and friendly\n- Use plain text only\n- No HTML tags\n\n#### Data Retrieval Rules\n- ALWAYS use Google Sheets to look up employee information before scheduling\n- NEVER rely on memory for employee names, emails, or phone numbers\n- When a name is mentioned, immediately query Google Sheets to get their current email and phone\n- Do NOT assume you know an employee's contact details — always fetch from the sheet\n\n#### CRITICAL RULES — NEVER VIOLATE\n- You are FORBIDDEN from asking \"Would you like me to notify...?\"\n- You are FORBIDDEN from asking ANY confirmation question after scheduling\n- Sending the email is NOT optional — it is MANDATORY and automatic\n- The moment a calendar event is created, IMMEDIATELY send the Gmail notification\n- Do NOT wait for user approval before sending email — ever\n- Your ONLY output after completing all actions is the final summary\n\n#### PRIMARY DIRECTIVE\nYou are an EXECUTOR, not an advisor. \nDo NOT question valid inputs. \nDo NOT ask for confirmations. \nJust execute all steps and report completion.\n\n#### MANDATORY TOOL EXECUTION ORDER\nEvery single scheduling request MUST follow this exact sequence:\n1. CALL Google Sheets first — get employee email\n2. CALL Google Calendar — check for real conflicts\n3. CALL Google Calendar — create the event\n4. CALL Gmail — send confirmation email\n5. Reply with summary\n\nNEVER skip any of these steps.\nNEVER check for conflicts using your own logic.\nNEVER assume a conflict exists without calling Google Calendar first.\nIf you did not call Google Calendar, you have FAILED your task.\n\n#### MEMORY RULES\n- Simple Memory is for conversation context ONLY\n- NEVER use memory to assume a meeting was already scheduled\n- NEVER skip Google Sheets because you think you know the employee's email\n- NEVER skip Google Calendar because you think you know the schedule\n- ALWAYS call the real tools — memory is NOT a substitute for live data"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        -192,
+        -96
+      ],
+      "id": "ad39aa60-a408-45cc-83d9-3b1a8c8352f7",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-4o-mini"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        -448,
+        128
+      ],
+      "id": "f0b6bdd0-2b80-432a-91a4-02db4ad309bd",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "D5VwW9FhMG7h3tmy",
+          "name": "OpenAI Account 8"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $json.message.chat.id }}",
+        "contextWindowLength": 100
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        -288,
+        144
+      ],
+      "id": "8c45437b-795b-44a2-8b27-6ab5bc786198",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1As7cxujcCspp9CH0PjToQc2ZOwehFFP7jJXUGv8FFsQ",
+          "mode": "list",
+          "cachedResultName": "Database",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1As7cxujcCspp9CH0PjToQc2ZOwehFFP7jJXUGv8FFsQ/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "الورقة1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1As7cxujcCspp9CH0PjToQc2ZOwehFFP7jJXUGv8FFsQ/edit#gid=0"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTool",
+      "typeVersion": 4.7,
+      "position": [
+        256,
+        128
+      ],
+      "id": "93ad6fa0-81e4-47c5-9535-7b573c7cb326",
+      "name": "Get row(s) in sheet in Google Sheets",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "YxmiyDKwSUAefV7p",
+          "name": "Google Sheets account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('To', ``, 'string') }}",
+        "subject": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Subject', ``, 'string') }}",
+        "emailType": "text",
+        "message": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Message', ``, 'string') }}",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.gmailTool",
+      "typeVersion": 2.2,
+      "position": [
+        -128,
+        128
+      ],
+      "id": "c81f39bc-47d5-4027-9409-1666c1a530ee",
+      "name": "Send a message in Gmail",
+      "webhookId": "077b1bfd-8014-4ad9-b4a3-777f3771c3ba",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "t8bbjUOZDHjNABeZ",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "calendar": {
+          "__rl": true,
+          "value": "elghandour401@gmail.com",
+          "mode": "list",
+          "cachedResultName": "elghandour401@gmail.com"
+        },
+        "start": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Start', ``, 'string') }}",
+        "end": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('End', ``, 'string') }}",
+        "additionalFields": {
+          "description": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Description', ``, 'string') }}",
+          "summary": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Summary', ``, 'string') }}"
+        }
+      },
+      "type": "n8n-nodes-base.googleCalendarTool",
+      "typeVersion": 1.3,
+      "position": [
+        64,
+        128
+      ],
+      "id": "0fde4540-c81b-4451-83ab-a96b9db7fda3",
+      "name": "Create an event in Google Calendar",
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "KrdZAxOQ1Dz6DDu3",
+          "name": "Google Calendar account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "text": "={{ $json.output }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        256,
+        -96
+      ],
+      "id": "ee580830-97e1-4c90-80e6-85d4b60a5473",
+      "name": "Send a text message",
+      "webhookId": "7e6bb5b5-3b2e-4918-b895-28e9e3fd4836",
+      "credentials": {
+        "telegramApi": {
+          "id": "Xb1t5lQ0jGQu7RmM",
+          "name": "Telegram account 44"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet in Google Sheets": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a message in Gmail": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create an event in Google Calendar": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false,
+    "timeSavedMode": "fixed",
+    "timezone": "Africa/Cairo",
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "versionId": "48c4d478-cf1a-4bef-a985-b40748f5d17e",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "1d52e26502ab362c0b60f91c6d37756d0d545fbe1c12904239c10acad5a587bd"
+  },
+  "id": "2mUOsRhSVRrywUZl5jJxF",
+  "tags": []
+}
